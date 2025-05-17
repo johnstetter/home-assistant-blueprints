@@ -1,0 +1,8 @@
+[
+  {
+    "name": "Motion-Based Lighting v2.5 - Adaptive & Configurable Brightness",
+    "description": "v2.5 \u2013 Motion-based lighting with adaptive color temp, smooth dimming, intelligent on/off logic, per-room overrides, and optional daytime mode.\n",
+    "domain": "automation",
+    "path": "blueprints/automation/johnstetter/motion_lighting_adaptive/motion_lighting_adaptive.yaml"
+  }
+]
