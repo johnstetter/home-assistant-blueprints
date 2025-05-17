@@ -109,17 +109,15 @@ trigger:
     to: "on"
 
 variables:
-  lights_were_off: >
-    {% set ids = iif(!input.lights is string, [!input.lights], !input.lights) %}
-    {{ ids | map('states') | map(attribute='state') | list | unique == ['off'] }}
+  lights_were_off: "{{ expand(lights) | map(attribute='state') | list | unique == ['off'] }}"
   brightness_pct: >
-    {{ iif(!input.override_initial_brightness != None, !input.override_initial_brightness, !input.initial_brightness) }}
+    {{ iif(override_initial_brightness != None, override_initial_brightness, initial_brightness) }}
   off_delay_val: >
-    {{ iif(!input.override_off_delay != None, !input.override_off_delay, !input.off_delay) }}
+    {{ iif(override_off_delay != None, override_off_delay, off_delay) }}
   dimming_brightness_val: >
-    {{ iif(!input.override_dimming_brightness != None, !input.override_dimming_brightness, !input.dimming_brightness) }}
+    {{ iif(override_dimming_brightness != None, override_dimming_brightness, dimming_brightness) }}
   dimming_time: >
-    {{ !input.dimming_time }}
+    {{ dimming_time }}
 
 condition:
   - condition: or
@@ -127,7 +125,7 @@ condition:
       - condition: sun
         after: sunset
       - condition: template
-        value_template: "{{ !input.daytime_mode == false }}"
+        value_template: "{{ not daytime_mode == false }}"
 
   - condition: time
     before: !input bedtime
@@ -184,8 +182,7 @@ action:
               until:
                 - condition: template
                   value_template: >
-                    {% set light = !input.lights | first %}
-                    {% set b = state_attr(light, 'brightness') %}
+                    {% set b = state_attr(lights[0], 'brightness') %}
                     {{ b is number and b < (dimming_brightness_val * 2.55) }}
           - delay: "{{ dimming_time }}"
           - service: light.turn_off
