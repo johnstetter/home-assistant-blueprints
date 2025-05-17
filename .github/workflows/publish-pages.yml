@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🛎️ Checkout repo
+      - name: 🛎️ Checkout repository
         uses: actions/checkout@v3
 
       - name: 🐍 Set up Python
@@ -19,8 +19,7 @@ jobs:
           python-version: '3.11'
 
       - name: 📦 Install dependencies
-        run: |
-          pip install pyyaml
+        run: pip install pyyaml
 
       - name: 🧠 Generate blueprint index JSON
         run: python scripts/generate_index.py
@@ -33,3 +32,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
+          publish_branch: gh-pages
+          force_orphan: true  # makes gh-pages a clean slate each time
