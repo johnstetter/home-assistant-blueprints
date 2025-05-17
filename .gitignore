@@ -1,0 +1,18 @@
+# macOS cruft
+.DS_Store
+
+# VS Code config
+.vscode/
+
+# YAML backup files
+*.bak
+*.swp
+*.swo
+*~
+
+# System logs
+*.log
+
+# OS-specific
+Thumbs.db
+desktop.ini
