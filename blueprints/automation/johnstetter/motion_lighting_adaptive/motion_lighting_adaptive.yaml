@@ -118,6 +118,8 @@ variables:
     {{ iif(!input.override_off_delay != None, !input.override_off_delay, !input.off_delay) }}
   dimming_brightness_val: >
     {{ iif(!input.override_dimming_brightness != None, !input.override_dimming_brightness, !input.dimming_brightness) }}
+  dimming_time: >
+    {{ !input.dimming_time }}
 
 condition:
   - condition: or
@@ -185,8 +187,7 @@ action:
                     {% set light = !input.lights | first %}
                     {% set b = state_attr(light, 'brightness') %}
                     {{ b is number and b < (dimming_brightness_val * 2.55) }}
-          - delay:
-              seconds: !input.dimming_time
+          - delay: "{{ dimming_time }}"
           - service: light.turn_off
             target:
               entity_id: !input lights
