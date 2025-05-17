@@ -16,3 +16,6 @@
 # OS-specific
 Thumbs.db
 desktop.ini
+
+# Python virtualenv
+.venv/
