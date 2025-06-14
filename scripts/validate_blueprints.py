@@ -4,6 +4,12 @@ import os
 import yaml
 import sys
 
+# Add a constructor to ignore unknown YAML tags (e.g., !input)
+def ignore_unknown_tags(loader, tag_suffix, node):
+    return loader.construct_scalar(node) if isinstance(node, yaml.ScalarNode) else loader.construct_sequence(node) if isinstance(node, yaml.SequenceNode) else loader.construct_mapping(node)
+
+yaml.SafeLoader.add_multi_constructor('!', ignore_unknown_tags)
+
 def find_blueprints(path):
     for root, _, files in os.walk(path):
         for file in files:
