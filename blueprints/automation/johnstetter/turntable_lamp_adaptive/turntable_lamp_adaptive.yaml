@@ -1,8 +1,9 @@
 blueprint:
   name: Turntable Lamp Automation with Adaptive Lighting & Notification
   description: >
-    Fades in a lamp to the right color and brightness when your record player starts,
-    turns it off when it stops, and notifies you if you leave the turntable running too long.
+    Fades in a lamp to the right color and brightness when your record player
+    starts, turns it off when it stops, and notifies you if you leave the
+    turntable running too long.
   domain: automation
   input:
     power_sensor:
@@ -64,7 +65,8 @@ blueprint:
     timer_helper:
       name: Timer Helper for “Left Running” Alert
       description: >
-        Create a timer helper (e.g., timer.record_player_running_too_long) and select it here.
+        Create a timer helper (e.g., timer.record_player_running_too_long) and
+        select it here.
       selector:
         entity:
           domain: timer
@@ -200,8 +202,9 @@ action:
             data:
               entity_id: !input voice_player
               message: >
-                Hey, your record has been spinning for over {{ states[inputs.running_too_long_minutes] }} minutes.
-                Check if it's time to flip the record, or if you forgot the music is still rolling!
+                Hey, your record has been spinning for over {{ states[inputs.running_too_long_minutes] }}
+                minutes. Check if it's time to flip the record, or if you forgot the music is still
+                rolling!
               cache: false
           # Wait and auto-off
           - delay:
