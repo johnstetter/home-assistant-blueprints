@@ -152,7 +152,7 @@ variables:
     {% else %} 500
     {% endif %}
   alert_minutes: !input running_too_long_minutes
-  alert_message: "{{ !input voice_message | replace('{{ minutes }}', (alert_minutes|string)) }}"
+  alert_voice_message: !input voice_message
 
 action:
   - choose:
@@ -211,7 +211,8 @@ action:
           - service: tts.cloud_say
             data:
               entity_id: !input voice_player
-              message: "{{ alert_message }}"
+              message: >
+                {{ alert_voice_message | replace("{{ minutes }}", (alert_minutes|string)) }}
               cache: false
           # Wait and auto-off
           - delay:
