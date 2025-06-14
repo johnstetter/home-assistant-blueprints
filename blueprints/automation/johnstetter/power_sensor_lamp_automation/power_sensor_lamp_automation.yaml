@@ -1,14 +1,10 @@
 blueprint:
   name: Power Sensor Lamp Automation with Adaptive Lighting & Alert
   description: >
-    Turns a lamp on or off based on the power draw of a device measured by a
-    power sensor.
-    Fades in the lamp with adaptive brightness and color temperature depending
-    on time of day.
-    Optionally alerts you and sets the lamp to a specified color if the device
-    has been running for too long.
-    All options are configurable from the UI. Usable for turntables, coffee
-    machines, irons, or any device with a power sensor.
+    Turns a lamp on or off based on the power draw of a device measured by a power sensor.
+    Fades in the lamp with adaptive brightness and color temperature depending on time of day.
+    Optionally alerts you and sets the lamp to a specified color if the device has been running for too long.
+    All options are configurable from the UI. Usable for turntables, coffee machines, irons, or any device with a power sensor.
   domain: automation
   input:
     power_sensor:
@@ -19,15 +15,13 @@ blueprint:
           domain: sensor
     lamp:
       name: Lamp to Control
-      description: Light to turn on/off (should support color_temp &
-        brightness).
+      description: Light to turn on/off (should support color_temp & brightness).
       selector:
         entity:
           domain: light
     voice_player:
       name: Media Player for Announcements
-      description: Media player for voice alerts (e.g., Home Assistant Voice
-        speaker).
+      description: Media player for voice alerts (e.g., Home Assistant Voice speaker).
       selector:
         entity:
           domain: media_player
@@ -72,8 +66,7 @@ blueprint:
     timer_helper:
       name: Timer Helper for “Running Too Long” Alert
       description: >
-        Create a timer helper (e.g., timer.device_running_too_long) and select
-        it here.
+        Create a timer helper (e.g., timer.device_running_too_long) and select it here.
       selector:
         entity:
           domain: timer
@@ -111,8 +104,7 @@ blueprint:
       name: Voice Alert Message
       description: >
         The message to announce when the device is left running too long.
-        You can use `{{ minutes }}` in your message to include the timer value
-        in minutes.
+        You can use `{{ minutes }}` in your message to include the timer value in minutes.
       default: >
         Attention: Your device has been running for over {{ minutes }} minutes.
         Please check if it needs your attention.
@@ -144,11 +136,9 @@ trigger:
 
 variables:
   hour: "{{ now().hour }}"
-  # Fade-in/out durations
   transition_on: !input time_fade_on
   transition_off: !input time_fade_off
 
-  # Adaptive brightness & color_temp
   brightness_final: >-
     {% if 6 <= hour < 11 %} 200
     {% elif 11 <= hour < 17 %} 180
@@ -161,10 +151,8 @@ variables:
     {% elif 17 <= hour < 23 %} 450
     {% else %} 500
     {% endif %}
-  alert_minutes: "{{ (inputs.running_too_long_minutes | int) }}"
-  alert_message: >
-    {{ inputs.voice_message | replace('{{ minutes }}',
-    alert_minutes|string) }}
+  alert_minutes: !input running_too_long_minutes
+  alert_message: "{{ !input voice_message | replace('{{ minutes }}', (alert_minutes|string)) }}"
 
 action:
   - choose:
@@ -233,3 +221,4 @@ action:
               entity_id: !input lamp
             data:
               transition: "{{ transition_off }}"
+
