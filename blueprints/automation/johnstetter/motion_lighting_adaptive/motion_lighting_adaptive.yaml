@@ -109,13 +109,17 @@ trigger:
     to: "on"
 
 variables:
-  lights_were_off: "{{ expand(lights) | map(attribute='state') | list | unique == ['off'] }}"
+  lights_were_off: "{{ expand(lights) | map(attribute='state') | list |
+    unique == ['off'] }}"
   brightness_pct: >
-    {{ iif(override_initial_brightness != None, override_initial_brightness, initial_brightness) }}
+    {{ iif(override_initial_brightness != None, override_initial_brightness,
+    initial_brightness) }}
   off_delay_val: >
-    {{ iif(override_off_delay != None, override_off_delay, off_delay) }}
+    {{ iif(override_off_delay != None, override_off_delay,
+    off_delay) }}
   dimming_brightness_val: >
-    {{ iif(override_dimming_brightness != None, override_dimming_brightness, dimming_brightness) }}
+    {{ iif(override_dimming_brightness != None, override_dimming_brightness,
+    dimming_brightness) }}
   dimming_time: >
     {{ dimming_time }}
 

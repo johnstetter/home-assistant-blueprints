@@ -1,0 +1,10 @@
+extends: default
+
+rules:
+  document-start: disable   # Don't require '---' at top of file
+  line-length: disable      # Home Assistant YAML is often long
+  comments: disable         # HA YAML rarely uses comments
+  trailing-spaces: enable   # Still a good practice
+  indentation: enable
+  truthy: disable           # HA often uses 'on'/'off' instead of true/false
+  key-duplicates: enable    # Good to catch accidental copy/paste mistakes
