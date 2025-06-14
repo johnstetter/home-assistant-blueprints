@@ -86,7 +86,7 @@ This blueprint lives here:
 ## Credits
 
 Created by [John Stetter](https://github.com/johnstetter)  
-Powered by vinyl, caffeine, and “wait, did I leave that spinning?”
+Powered by music, tea, and “wait, did I leave that spinning?”
 
 MIT License. Share & enjoy.
 
