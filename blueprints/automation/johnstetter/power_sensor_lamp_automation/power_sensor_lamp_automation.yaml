@@ -1,33 +1,33 @@
 blueprint:
-  name: Turntable Lamp Automation with Adaptive Lighting & Notification
+  name: Power Sensor Lamp Automation with Adaptive Lighting & Alert
   description: >
-    Fades in a lamp to the right color and brightness when your record player
-    starts, turns it off when it stops, and notifies you if you leave the
-    turntable running too long.
+    Turns a lamp on or off based on the power draw of a device measured by a power sensor. 
+    Fades in the lamp with adaptive brightness and color temperature depending on time of day.
+    Optionally alerts you and sets the lamp to a specified color if the device has been running for too long.
+    All options are configurable from the UI. Usable for turntables, coffee machines, irons, or any device with a power sensor.
   domain: automation
   input:
     power_sensor:
       name: Power Consumption Sensor
-      description: Sensor measuring the record player’s power (in watts)
+      description: Sensor measuring device power usage in watts.
       selector:
         entity:
           domain: sensor
     lamp:
       name: Lamp to Control
-      description: Light to turn on/off (should support color_temp & brightness)
+      description: Light to turn on/off (should support color_temp & brightness).
       selector:
         entity:
           domain: light
     voice_player:
       name: Media Player for Announcements
-      description: Media player for voice alerts (e.g., Home Assistant Voice
-        speaker)
+      description: Media player for voice alerts (e.g., Home Assistant Voice speaker).
       selector:
         entity:
           domain: media_player
     on_threshold:
       name: "ON: Power threshold (W)"
-      description: Watts above which the lamp turns on
+      description: Watts above which the lamp turns on.
       default: 3
       selector:
         number:
@@ -37,7 +37,7 @@ blueprint:
           unit_of_measurement: W
     off_threshold:
       name: "OFF: Power threshold (W)"
-      description: Watts below which the lamp turns off
+      description: Watts below which the lamp turns off.
       default: 2
       selector:
         number:
@@ -64,10 +64,9 @@ blueprint:
           step: 1
           unit_of_measurement: s
     timer_helper:
-      name: Timer Helper for “Left Running” Alert
+      name: Timer Helper for “Running Too Long” Alert
       description: >
-        Create a timer helper (e.g., timer.record_player_running_too_long) and
-        select it here.
+        Create a timer helper (e.g., timer.device_running_too_long) and select it here.
       selector:
         entity:
           domain: timer
@@ -80,39 +79,49 @@ blueprint:
           max: 180
           step: 1
           unit_of_measurement: min
-    red_brightness:
-      name: Brightness for “left running” red alert
+    alert_brightness:
+      name: Brightness for “running too long” alert
       default: 255
       selector:
         number:
           min: 1
           max: 255
           step: 1
-    red_rgb:
-      name: Red RGB Color
+    alert_rgb:
+      name: Alert RGB Color
       default: [255, 50, 50]
       selector:
         color_rgb:
-    red_duration:
-      name: Duration to leave lamp red after alert (minutes)
+    alert_duration:
+      name: Duration to leave lamp on for alert (minutes)
       default: 10
       selector:
         number:
           min: 1
           max: 60
           step: 1
+    voice_message:
+      name: Voice Alert Message
+      description: >
+        The message to announce when the device is left running too long.  
+        You can use `{{ minutes }}` in your message to include the timer value in minutes.
+      default: >
+        Attention: Your device has been running for over {{ minutes }} minutes.
+        Please check if it needs your attention.
+      selector:
+        text:
 
 mode: restart
 
 trigger:
-  # Record starts
+  # Device starts
   - platform: numeric_state
     entity_id: !input power_sensor
     above: !input on_threshold
     for:
       seconds: 5
 
-  # Record stops
+  # Device stops
   - platform: numeric_state
     entity_id: !input power_sensor
     below: !input off_threshold
@@ -131,7 +140,7 @@ variables:
   transition_on: !input time_fade_on
   transition_off: !input time_fade_off
 
-  # Adaptive brightness & color_temp (tweak if desired)
+  # Adaptive brightness & color_temp
   brightness_final: >-
     {% if 6 <= hour < 11 %} 200
     {% elif 11 <= hour < 17 %} 180
@@ -144,16 +153,18 @@ variables:
     {% elif 17 <= hour < 23 %} 450
     {% else %} 500
     {% endif %}
+  alert_minutes: "{{ (inputs.running_too_long_minutes | int) }}"
+  alert_message: "{{ inputs.voice_message | replace('{{ minutes }}', alert_minutes|string) }}"
 
 action:
   - choose:
-      # ---- Record starts (turn ON, adaptive, fade-in, start timer)
+      # ---- Device starts (turn ON, adaptive, fade-in, start timer)
       - conditions:
           - condition: numeric_state
             entity_id: !input power_sensor
             above: !input on_threshold
         sequence:
-          # Start or restart the timer for “left running” alert
+          # Start or restart the timer for “running too long” alert
           - service: timer.start
             target:
               entity_id: !input timer_helper
@@ -170,7 +181,7 @@ action:
               color_temp: "{{ color_temp_final }}"
               transition: "{{ transition_on }}"
 
-      # ---- Record stops (turn OFF, cancel timer, fade-out)
+      # ---- Device stops (turn OFF, cancel timer, fade-out)
       - conditions:
           - condition: numeric_state
             entity_id: !input power_sensor
@@ -185,34 +196,31 @@ action:
             data:
               transition: "{{ transition_off }}"
 
-      # ---- Timer finished (lamp red, voice alert, auto-off)
+      # ---- Timer finished (lamp alert color, voice alert, auto-off)
       - conditions:
           - condition: template
             value_template: "{{ trigger.event.event_type == 'timer.finished' }}"
         sequence:
-          # Lamp RED
+          # Lamp Alert Color
           - service: light.turn_on
             target:
               entity_id: !input lamp
             data:
-              brightness: !input red_brightness
-              rgb_color: !input red_rgb
+              brightness: !input alert_brightness
+              rgb_color: !input alert_rgb
               transition: 2
-          # Announcement
+          # Announcement (customizable)
           - service: tts.cloud_say
             data:
               entity_id: !input voice_player
-              message: >
-                Hey, your record has been spinning for over
-                {{ states[inputs.running_too_long_minutes] }} minutes.
-                Check if it's time to flip the record, or if you forgot the
-                music is still rolling!
+              message: "{{ alert_message }}"
               cache: false
           # Wait and auto-off
           - delay:
-              minutes: !input red_duration
+              minutes: !input alert_duration
           - service: light.turn_off
             target:
               entity_id: !input lamp
             data:
               transition: "{{ transition_off }}"
+
