@@ -19,7 +19,8 @@ blueprint:
           domain: sensor
     lamp:
       name: Lamp to Control
-      description: Light to turn on/off (should support color_temp & brightness).
+      description: Light to turn on/off (should support color_temp &
+        brightness).
       selector:
         entity:
           domain: light
@@ -161,7 +162,9 @@ variables:
     {% else %} 500
     {% endif %}
   alert_minutes: "{{ (inputs.running_too_long_minutes | int) }}"
-  alert_message: "{{ inputs.voice_message | replace('{{ minutes }}', alert_minutes|string) }}"
+  alert_message: >
+    {{ inputs.voice_message | replace('{{ minutes }}',
+    alert_minutes|string) }}
 
 action:
   - choose:
