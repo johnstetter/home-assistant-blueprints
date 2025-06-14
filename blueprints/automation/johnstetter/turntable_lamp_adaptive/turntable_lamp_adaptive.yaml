@@ -20,7 +20,8 @@ blueprint:
           domain: light
     voice_player:
       name: Media Player for Announcements
-      description: Media player for voice alerts (e.g., Home Assistant Voice speaker)
+      description: Media player for voice alerts (e.g., Home Assistant Voice
+        speaker)
       selector:
         entity:
           domain: media_player
@@ -202,9 +203,10 @@ action:
             data:
               entity_id: !input voice_player
               message: >
-                Hey, your record has been spinning for over {{ states[inputs.running_too_long_minutes] }}
-                minutes. Check if it's time to flip the record, or if you forgot the music is still
-                rolling!
+                Hey, your record has been spinning for over
+                {{ states[inputs.running_too_long_minutes] }} minutes.
+                Check if it's time to flip the record, or if you forgot the
+                music is still rolling!
               cache: false
           # Wait and auto-off
           - delay:
