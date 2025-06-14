@@ -233,4 +233,3 @@ action:
               entity_id: !input lamp
             data:
               transition: "{{ transition_off }}"
-
