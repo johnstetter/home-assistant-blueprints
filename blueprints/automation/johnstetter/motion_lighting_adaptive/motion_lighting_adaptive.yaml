@@ -1,7 +1,7 @@
 blueprint:
   name: Motion-Based Lighting v2.5 - DEBUG VERSION
   description: >
-    v2.5 – Motion-based lighting with debug logging.
+    v2.5 \u2013 Motion-based lighting with debug logging.
   domain: automation
   input:
     motion_sensor:
@@ -128,7 +128,7 @@ condition:
       - condition: sun
         after: sunset
       - condition: template
-        value_template: "{{ daytime_mode }}"
+        value_template: "{{ !input daytime_mode }}"
   - condition: time
     before: !input bedtime
 
