@@ -98,7 +98,7 @@ blueprint:
 
     daytime_mode:
       name: Allow Lights During Daytime (Cloudy Mode)
-      default: false
+      default: true
       selector:
         boolean: {}
 
