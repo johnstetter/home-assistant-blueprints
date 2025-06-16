@@ -1,7 +1,7 @@
 blueprint:
   name: Motion-Based Lighting v2.5 - Adaptive & Configurable Brightness
   description: >
-    v2.5 – Motion-based lighting with adaptive color temp, smooth dimming,
+    v2.5 \u2013 Motion-based lighting with adaptive color temp, smooth dimming,
     intelligent on/off logic, per-room overrides, and optional daytime mode.
   domain: automation
   input:
@@ -10,14 +10,12 @@ blueprint:
       selector:
         entity:
           domain: binary_sensor
-
     lights:
       name: Lights
       selector:
         entity:
           domain: light
           multiple: true
-
     switches:
       name: Switches (Optional)
       default: []
@@ -25,7 +23,6 @@ blueprint:
         entity:
           domain: switch
           multiple: true
-
     initial_brightness:
       name: Default Initial Brightness
       default: 100
@@ -34,7 +31,6 @@ blueprint:
           min: 10
           max: 100
           unit_of_measurement: percent
-
     override_initial_brightness:
       name: Override Initial Brightness (Optional)
       default: null
@@ -44,7 +40,6 @@ blueprint:
           max: 100
           unit_of_measurement: percent
           mode: slider
-
     off_delay:
       name: Default Motion Inactivity Delay
       default: 300
@@ -53,7 +48,6 @@ blueprint:
           min: 30
           max: 1800
           unit_of_measurement: seconds
-
     override_off_delay:
       name: Override Off Delay (Optional)
       default: null
@@ -62,7 +56,6 @@ blueprint:
           min: 30
           max: 1800
           unit_of_measurement: seconds
-
     dimming_time:
       name: Dimming Time
       default: 60
@@ -71,7 +64,6 @@ blueprint:
           min: 10
           max: 300
           unit_of_measurement: seconds
-
     dimming_brightness:
       name: Default Minimum Dimming Brightness
       default: 40
@@ -80,7 +72,6 @@ blueprint:
           min: 10
           max: 80
           unit_of_measurement: percent
-
     override_dimming_brightness:
       name: Override Dimming Brightness (Optional)
       default: null
@@ -89,13 +80,11 @@ blueprint:
           min: 10
           max: 80
           unit_of_measurement: percent
-
     bedtime:
       name: Bedtime
       default: "23:00:00"
       selector:
         time: {}
-
     daytime_mode:
       name: Allow Lights During Daytime (Cloudy Mode)
       default: true
@@ -120,15 +109,19 @@ variables:
   override_dimming_brightness: !input override_dimming_brightness
   dimming_time_input: !input dimming_time
 
-  lights_were_off: "{{ expand(lights) | map(attribute='state') | list | unique == ['off'] }}"
-  brightness_pct: >
-    {{ iif(override_initial_brightness != None, override_initial_brightness, initial_brightness) }}
-  off_delay_val: >
-    {{ iif(override_off_delay != None, override_off_delay, off_delay) }}
-  dimming_brightness_val: >
-    {{ iif(override_dimming_brightness != None, override_dimming_brightness, dimming_brightness) }}
-  dimming_time: >
+  brightness_pct: >-
+    {{ override_initial_brightness if override_initial_brightness is not none else initial_brightness }}
+  off_delay_val: >-
+    {{ override_off_delay if override_off_delay is not none else off_delay }}
+  dimming_brightness_val: >-
+    {{ override_dimming_brightness if override_dimming_brightness is not none else dimming_brightness }}
+  dimming_time: >-
     {{ dimming_time_input }}
+
+  # Check if all lights are off
+  lights_were_off: >-
+    {% set lights_list = lights if lights is iterable and lights is not string else [lights] %}
+    {{ lights_list | map('states') | list | select('equalto', 'off') | list | count == lights_list | count }}
 
 condition:
   - condition: or
@@ -136,8 +129,7 @@ condition:
       - condition: sun
         after: sunset
       - condition: template
-        value_template: "{{ not daytime_mode == false }}"
-
+        value_template: "{{ daytime_mode }}"
   - condition: time
     before: !input bedtime
 
@@ -166,17 +158,18 @@ action:
               brightness_pct: "{{ brightness_pct | int }}"
               color_temp: "{{ color_temp | int }}"
               transition: 2
-          - service: switch.turn_on
-            target:
-              entity_id: "{{ switches }}"
-
+          - choose:
+              - conditions: "{{ switches|length > 0 }}"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: "{{ switches }}"
   - wait_for_trigger:
       - platform: state
         entity_id: !input motion_sensor
         to: "off"
         for:
           seconds: "{{ off_delay_val | int }}"
-
   - choose:
       - conditions:
           - condition: template
@@ -192,13 +185,17 @@ action:
                 - delay: "00:00:10"
               until:
                 - condition: template
-                  value_template: >
-                    {% set b = state_attr(lights[0], 'brightness') %}
+                  value_template: >-
+                    {% set first_light = (lights if lights is iterable and lights is not string else [lights])[0] %}
+                    {% set b = state_attr(first_light, 'brightness') %}
                     {{ b is number and b < (dimming_brightness_val * 2.55) }}
           - delay: "{{ dimming_time }}"
           - service: light.turn_off
             target:
               entity_id: "{{ lights }}"
-          - service: switch.turn_off
-            target:
-              entity_id: "{{ switches }}"
+          - choose:
+              - conditions: "{{ switches|length > 0 }}"
+                sequence:
+                  - service: switch.turn_off
+                    target:
+                      entity_id: "{{ switches }}"
