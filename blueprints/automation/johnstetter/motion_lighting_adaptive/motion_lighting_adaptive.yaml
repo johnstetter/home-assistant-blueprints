@@ -103,25 +103,32 @@ blueprint:
         boolean: {}
 
 mode: restart
+
 trigger:
   - platform: state
     entity_id: !input motion_sensor
     to: "on"
 
 variables:
-  lights_were_off: "{{ expand(lights) | map(attribute='state') | list |
-    unique == ['off'] }}"
+  lights: !input lights
+  switches: !input switches
+  initial_brightness: !input initial_brightness
+  override_initial_brightness: !input override_initial_brightness
+  off_delay: !input off_delay
+  override_off_delay: !input override_off_delay
+  dimming_brightness: !input dimming_brightness
+  override_dimming_brightness: !input override_dimming_brightness
+  dimming_time_input: !input dimming_time
+
+  lights_were_off: "{{ expand(lights) | map(attribute='state') | list | unique == ['off'] }}"
   brightness_pct: >
-    {{ iif(override_initial_brightness != None, override_initial_brightness,
-    initial_brightness) }}
+    {{ iif(override_initial_brightness != None, override_initial_brightness, initial_brightness) }}
   off_delay_val: >
-    {{ iif(override_off_delay != None, override_off_delay,
-    off_delay) }}
+    {{ iif(override_off_delay != None, override_off_delay, off_delay) }}
   dimming_brightness_val: >
-    {{ iif(override_dimming_brightness != None, override_dimming_brightness,
-    dimming_brightness) }}
+    {{ iif(override_dimming_brightness != None, override_dimming_brightness, dimming_brightness) }}
   dimming_time: >
-    {{ dimming_time }}
+    {{ dimming_time_input }}
 
 condition:
   - condition: or
@@ -154,14 +161,14 @@ action:
                 {% endif %}
           - service: light.turn_on
             target:
-              entity_id: !input lights
+              entity_id: "{{ lights }}"
             data:
               brightness_pct: "{{ brightness_pct | int }}"
               color_temp: "{{ color_temp | int }}"
               transition: 2
           - service: switch.turn_on
             target:
-              entity_id: !input switches
+              entity_id: "{{ switches }}"
 
   - wait_for_trigger:
       - platform: state
@@ -179,7 +186,7 @@ action:
               sequence:
                 - service: light.turn_on
                   target:
-                    entity_id: !input lights
+                    entity_id: "{{ lights }}"
                   data:
                     brightness_step_pct: -10
                 - delay: "00:00:10"
@@ -191,7 +198,7 @@ action:
           - delay: "{{ dimming_time }}"
           - service: light.turn_off
             target:
-              entity_id: !input lights
+              entity_id: "{{ lights }}"
           - service: switch.turn_off
             target:
-              entity_id: !input switches
+              entity_id: "{{ switches }}"
