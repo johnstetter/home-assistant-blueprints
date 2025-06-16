@@ -1,8 +1,7 @@
 blueprint:
-  name: Motion-Based Lighting v2.5 - Adaptive & Configurable Brightness
+  name: Motion-Based Lighting v2.5 - DEBUG VERSION
   description: >
-    v2.5 \u2013 Motion-based lighting with adaptive color temp, smooth dimming,
-    intelligent on/off logic, per-room overrides, and optional daytime mode.
+    v2.5 – Motion-based lighting with debug logging.
   domain: automation
   input:
     motion_sensor:
@@ -134,68 +133,60 @@ condition:
     before: !input bedtime
 
 action:
+  - service: system_log.write
+    data:
+      message: >
+        DEBUG: motion triggered, lights={{ lights }}, lights_were_off={{ lights_were_off }},
+        brightness_pct={{ brightness_pct }}, switches={{ switches }}
+      level: info
+
+  - variables:
+      color_temp: >-
+        {% set hour = now().hour %}
+        {% if hour >= 22 %}
+          2700
+        {% elif hour >= 20 %}
+          3000
+        {% elif hour >= 18 %}
+          4000
+        {% else %}
+          5000
+        {% endif %}
+  - service: light.turn_on
+    target:
+      entity_id: "{{ lights }}"
+    data:
+      brightness_pct: "{{ brightness_pct | int }}"
+      color_temp: "{{ color_temp | int }}"
+      transition: 2
+
   - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ lights_were_off }}"
+      - conditions: "{{ switches|length > 0 }}"
         sequence:
-          - variables:
-              color_temp: >-
-                {% set hour = now().hour %}
-                {% if hour >= 22 %}
-                  2700
-                {% elif hour >= 20 %}
-                  3000
-                {% elif hour >= 18 %}
-                  4000
-                {% else %}
-                  5000
-                {% endif %}
-          - service: light.turn_on
+          - service: switch.turn_on
             target:
-              entity_id: "{{ lights }}"
-            data:
-              brightness_pct: "{{ brightness_pct | int }}"
-              color_temp: "{{ color_temp | int }}"
-              transition: 2
-          - choose:
-              - conditions: "{{ switches|length > 0 }}"
-                sequence:
-                  - service: switch.turn_on
-                    target:
-                      entity_id: "{{ switches }}"
+              entity_id: "{{ switches }}"
+
   - wait_for_trigger:
       - platform: state
         entity_id: !input motion_sensor
         to: "off"
         for:
           seconds: "{{ off_delay_val | int }}"
+
+  - service: system_log.write
+    data:
+      message: >
+        DEBUG: waiting complete, about to turn off lights={{ lights }} and switches={{ switches }}
+      level: info
+
+  - service: light.turn_off
+    target:
+      entity_id: "{{ lights }}"
+
   - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ lights_were_off }}"
+      - conditions: "{{ switches|length > 0 }}"
         sequence:
-          - repeat:
-              sequence:
-                - service: light.turn_on
-                  target:
-                    entity_id: "{{ lights }}"
-                  data:
-                    brightness_step_pct: -10
-                - delay: "00:00:10"
-              until:
-                - condition: template
-                  value_template: >-
-                    {% set first_light = (lights if lights is iterable and lights is not string else [lights])[0] %}
-                    {% set b = state_attr(first_light, 'brightness') %}
-                    {{ b is number and b < (dimming_brightness_val * 2.55) }}
-          - delay: "{{ dimming_time }}"
-          - service: light.turn_off
+          - service: switch.turn_off
             target:
-              entity_id: "{{ lights }}"
-          - choose:
-              - conditions: "{{ switches|length > 0 }}"
-                sequence:
-                  - service: switch.turn_off
-                    target:
-                      entity_id: "{{ switches }}"
+              entity_id: "{{ switches }}"
