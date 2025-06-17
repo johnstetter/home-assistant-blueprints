@@ -153,6 +153,7 @@ variables:
     {% endif %}
   alert_minutes: !input running_too_long_minutes
   alert_voice_message: !input voice_message
+  power_sensor_entity: !input power_sensor
 
 action:
   - choose:
@@ -207,12 +208,14 @@ action:
               brightness: !input alert_brightness
               rgb_color: !input alert_rgb
               transition: 2
-          # Announcement (customizable)
+          # Announcement (actual minutes elapsed!)
           - service: tts.cloud_say
             data:
               entity_id: !input voice_player
               message: >
-                {{ alert_voice_message | replace("{{ minutes }}", (alert_minutes|string)) }}
+                {% set start_dt = as_datetime(states[power_sensor_entity].last_changed) %}
+                {% set elapsed = ((now() - start_dt).total_seconds() // 1) // 60 | int %}
+                {{ alert_voice_message | replace("{{ minutes }}", (elapsed|string)) }}
               cache: false
           # Wait and auto-off
           - delay:
