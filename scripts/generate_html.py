@@ -32,7 +32,7 @@ def generate_html(index_path="site/blueprint_index.json", output_path="site/inde
 <body>
     <header>
         <h1>🧠 John Stetter’s Home Assistant Blueprints</h1>
-        <div class=\"subtitle\">A developer playground for automations, powered by caffeine, YAML, and questionable life choices.</div>
+        <div class=\"subtitle\">A developer playground for automations.  This is mostly an experiment for agent-based copilot development".</div>
     </header>
     <main>
         <p>Welcome! This is an <b>automagically generated</b> index of all published blueprints. Use, fork, break, or improve them. PRs and bug reports welcome. 🚀</p>
