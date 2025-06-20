@@ -9,6 +9,7 @@ These blueprints are written with clarity, flexibility, and real-world usability
 | Blueprint                         | Description                                         | Docs |
 |----------------------------------|-----------------------------------------------------|------|
 | **Motion-Based Lighting v2.5**   | Adaptive lighting with smooth dimming, color temp, and per-room overrides | [View →](./blueprints/automation/johnstetter/motion_lighting_adaptive/README.md) |
+| **Power Sensor Lamp Automation** | Lamp control based on device power usage, adaptive lighting, and alert features | [View →](./blueprints/automation/johnstetter/power_sensor_lamp_automation/README.md) |
 
 > 💡 All blueprints are YAML-based, self-contained, and designed to work with native Home Assistant automations.
 
